@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="DateTimeBarView">
+        <attr name="timeBar_lineWidth" format="dimension" />
+        <attr name="timeBar_lineColor" format="color" />
+        <attr name="timeBar_centerLineWidth" format="dimension" />
+        <attr name="timeBar_centerLineColor" format="color" />
+        <attr name="timeBar_textSize" format="dimension" />
+    </declare-styleable>
+</resources>
