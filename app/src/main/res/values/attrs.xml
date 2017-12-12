@@ -6,5 +6,10 @@
         <attr name="timeBar_centerLineWidth" format="dimension" />
         <attr name="timeBar_centerLineColor" format="color" />
         <attr name="timeBar_textSize" format="dimension" />
+        <attr name="timeBar_textColor" format="color" />
+
+        <attr name="timeBar_hoursMax" format="integer" />
+
+        <attr name="timeBar_viewMax" format="integer"/>
     </declare-styleable>
 </resources>
