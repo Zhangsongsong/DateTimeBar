@@ -4,10 +4,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="com.zasko.datetimebarlib.MainActivity">
 
     <com.zasko.datetimebarlib.DateTimeBarView
+        android:id="@+id/date_time_bar_view"
         android:layout_width="match_parent"
-        android:layout_height="50dp" />
+        android:layout_height="50dp"
+        app:timeBar_centerLineColor="@color/colorAccent"
+        app:timeBar_textColor="@color/colorAccent"
+        app:timeBar_textSize="10sp" />
+
+    <TextView
+        android:id="@+id/time_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/colorAccent"
+        android:textSize="18sp" />
 
 </LinearLayout>

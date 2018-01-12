@@ -220,7 +220,7 @@ public class DateTimeBarView extends View {
             if (rightCount % mHourMaxNum == 0) {
                 canvas.drawLine(tmpRightLocal, tmpMaxTopHeight, tmpRightLocal, tmpMaxBottomHeight, mPaintLine);
                 String timeText = String.format("%02d:00", (rightHour % 24));
-                canvas.drawText(timeText, tmpRightLocal - strWidth, tmpMaxTopHeight + strHeight -10, mPaintText);
+                canvas.drawText(timeText, tmpRightLocal - strWidth, tmpMaxTopHeight + strHeight - 10, mPaintText);
                 rightHour++;
 
 
@@ -243,7 +243,7 @@ public class DateTimeBarView extends View {
             if (leftCount % mHourMaxNum == 0) {
                 canvas.drawLine(tmpLeftLocal, tmpMaxTopHeight, tmpLeftLocal, tmpMaxBottomHeight, mPaintLine);
                 String timeText = String.format("%02d:00", ((leftHour + 24) % 24));
-                canvas.drawText(timeText, tmpLeftLocal - strWidth, tmpMaxTopHeight + strHeight -10, mPaintText);
+                canvas.drawText(timeText, tmpLeftLocal - strWidth, tmpMaxTopHeight + strHeight - 10, mPaintText);
                 leftHour--;
             } else {
                 canvas.drawLine(tmpLeftLocal, tmpMaxHalfHeight, tmpLeftLocal, tmpMaxBottomHeight, mPaintLine);
@@ -266,12 +266,90 @@ public class DateTimeBarView extends View {
         canvas.drawLine(mViewWidth / 2, 0, mViewWidth / 2, mViewHeight, mPaintCenterLine);
     }
 
+    /*是否双指以上按下*/
+    private boolean isActionPointerDown;
+
+    /*滑动需要的参数： 第一次按下时记录当前位置*/
+    private float mActionDownFirstX;
+    /*第一次按下时记录当前的时间*/
+    private long mActionDowmFirstTime;
+    /*单指移动的距离*/
+    private float mTmpMoveX = 0f;
+
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+//        Log.d(TAG, "onTouchEvent: ---------->" + event.getAction());
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                mActionDownFirstX = event.getX();
+                mActionDowmFirstTime = mCurrentTime;
 
+                Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_DOWN");
+                break;
+            case MotionEvent.ACTION_UP:
+                Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_UP");
+                break;
+            case MotionEvent.ACTION_MOVE:
+//                Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_UP");
+                if (isActionPointerDown) {
+
+                } else {
+                    float moveX = event.getX();
+                    float tmpBetX = moveX - mActionDownFirstX;
+                    if (tmpBetX != mTmpMoveX) {
+                        mTmpMoveX = tmpBetX;
+                        Log.d(TAG, "onTouchEvent: ------------->" + Math.round(mTmpMoveX * mPxTime));
+                        long tmpTime = mActionDowmFirstTime - Math.round(mTmpMoveX * mPxTime) * 1000;
+                        mCurrentTime = tmpTime;
+                        invalidate();
+                        if (mOnTimeBarMoveListener != null) {
+                            mOnTimeBarMoveListener.onTimeBarMove(mCurrentTime);
+                        }
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                isActionPointerDown = true;
+
+                Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_POINTER_DOWN");
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+
+                isActionPointerDown = false;
+                Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_POINTER_UP");
+                break;
+        }
 
         return true;
+    }
+
+    /**
+     * 设置当前时间
+     *
+     * @param time
+     */
+    public void setCurrentTime(long time) {
+        mCurrentTime = time;
+        invalidate();
+    }
+
+
+    private OnTimeBarMoveListener mOnTimeBarMoveListener;
+
+    public void setOnTimeBarMoveListener(OnTimeBarMoveListener listener) {
+        this.mOnTimeBarMoveListener = listener;
+    }
+
+    public OnTimeBarMoveListener getOnTimeBarMoveListener() {
+        return mOnTimeBarMoveListener;
+    }
+
+    /**
+     * 时间轴滑动回调
+     */
+    public interface OnTimeBarMoveListener {
+        void onTimeBarMove(long time);
     }
 
 
