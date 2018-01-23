@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
-import android.text.format.DateFormat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -156,8 +155,6 @@ public class DateTimeBarView extends View {
 
         Log.d(TAG, "onMeasure: ------->" + mViewWidth + "---小时："
                 + mHouWidth + "---分钟：" + mMinWidth + "---秒：" + mSecWidth + "---像素：" + mPxTime);
-
-
     }
 
     @Override
@@ -188,7 +185,7 @@ public class DateTimeBarView extends View {
         String tmpDate = mDateFormat.format(new Date(mCurrentTime));
         mPaintLine.setColor(Color.WHITE);
 
-        Log.d(TAG, "drawLine: -------->" + tmpDate);
+//        Log.d(TAG, "drawLine: -------->" + tmpDate);
 
         String timeDate = tmpDate.split(" ")[1];
         String[] timeDates = timeDate.split(":");
@@ -205,7 +202,7 @@ public class DateTimeBarView extends View {
         float halfViewWidth = mViewWidth / 2;
         float nextHourWidth = halfViewWidth + ((60 - minute) * 60 + (60 - sec)) * mSecWidth;
 
-        Log.d(TAG, "drawLine: --------->" + halfViewWidth + "---" + nextHourWidth);
+//        Log.d(TAG, "drawLine: --------->" + halfViewWidth + "---" + nextHourWidth);
 
         float tmpMaxTopHeight = mViewHeight * DEFAULT_HOUR_BOTTOM_PADDING;
         float tmpMaxBottomHeight = mViewHeight * DEFAULT_HOUR_TOP_PADDING;
@@ -272,9 +269,14 @@ public class DateTimeBarView extends View {
     /*滑动需要的参数： 第一次按下时记录当前位置*/
     private float mActionDownFirstX;
     /*第一次按下时记录当前的时间*/
-    private long mActionDowmFirstTime;
+    private long mActionDownFirstTime;
     /*单指移动的距离*/
     private float mTmpMoveX = 0f;
+
+    /*双指移动的距离*/
+    private float mDoubleMoveX = 0f;
+    private float mDoubleFirstBet = 0;
+    private int mDoubleMoveIndex = 0;
 
 
     @Override
@@ -282,17 +284,29 @@ public class DateTimeBarView extends View {
 //        Log.d(TAG, "onTouchEvent: ---------->" + event.getAction());
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
+                mDoubleMoveIndex = 1;
+
                 mActionDownFirstX = event.getX();
-                mActionDowmFirstTime = mCurrentTime;
+                mActionDownFirstTime = mCurrentTime;
 
                 Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_DOWN");
                 break;
             case MotionEvent.ACTION_UP:
+                mDoubleMoveIndex = 0;
                 Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_UP");
                 break;
             case MotionEvent.ACTION_MOVE:
-//                Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_UP");
-                if (isActionPointerDown) {
+//                L
+                if (mDoubleMoveIndex >= 2) {
+                    float moveX = Math.abs(getBetweenX(event));
+
+                    if (moveX != mDoubleMoveX) {
+                        mDoubleMoveX = moveX;
+                        float tmp = mDoubleMoveX - mDoubleFirstBet; /*计算出缩放的距离*/
+                        Log.d(TAG, "onTouchEvent: -------->" + "双指操控！！！" + tmp + "------" + mDoubleFirstBet);
+                        scale(tmp / 100.0f);
+
+                    }
 
                 } else {
                     float moveX = event.getX();
@@ -300,7 +314,7 @@ public class DateTimeBarView extends View {
                     if (tmpBetX != mTmpMoveX) {
                         mTmpMoveX = tmpBetX;
                         Log.d(TAG, "onTouchEvent: ------------->" + Math.round(mTmpMoveX * mPxTime));
-                        long tmpTime = mActionDowmFirstTime - Math.round(mTmpMoveX * mPxTime) * 1000;
+                        long tmpTime = mActionDownFirstTime - Math.round(mTmpMoveX * mPxTime) * 1000;
                         mCurrentTime = tmpTime;
                         invalidate();
                         if (mOnTimeBarMoveListener != null) {
@@ -310,18 +324,53 @@ public class DateTimeBarView extends View {
                 }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                isActionPointerDown = true;
+                mDoubleMoveIndex += 1;
+//                isActionPointerDown = true;
+                mDoubleFirstBet = Math.abs(getBetweenX(event));
+                Log.d(TAG, "onTouchEvent: ------> MotionEvent.双指操控!!!" + mDoubleFirstBet);
 
-                Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_POINTER_DOWN");
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-
+                mDoubleMoveIndex -= 1;
                 isActionPointerDown = false;
                 Log.d(TAG, "onTouchEvent: ------> MotionEvent.ACTION_POINTER_UP");
                 break;
         }
 
         return true;
+    }
+
+    private void scale(float value) {
+
+       /*范围限制*/
+        if (value > 0) {
+            if (mHouWidth > mViewWidth) {
+                return;
+            }
+        }
+
+        if (value < 0) {
+            if (mHouWidth < mViewWidth / 10) {
+                return;
+            }
+        }
+
+        mHouWidth = mHouWidth + value;
+        mMinWidth = mHouWidth / 60f;
+        mSecWidth = mMinWidth / 60f;
+
+        mPxTime = 1 / mSecWidth;
+
+
+        invalidate();
+    }
+
+    /**
+     * @param event
+     * @return
+     */
+    private float getBetweenX(MotionEvent event) {
+        return event.getX(0) - event.getX(1);
     }
 
     /**
