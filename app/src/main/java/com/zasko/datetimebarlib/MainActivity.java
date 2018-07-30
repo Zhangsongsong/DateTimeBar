@@ -10,6 +10,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupWindow;
+import android.widget.TextView;
+
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,34 +30,23 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
 
-        Log.d(TAG, "onCreate: ----->" + SimpleDateFormat.getInstance().getTimeZone().getRawOffset());
         long offsetTime = SimpleDateFormat.getInstance().getTimeZone().getRawOffset();
         mDateTimeBarView.setCurrentTime(System.currentTimeMillis() + offsetTime);
 
+        final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         mDateTimeBarView.setOnTimeBarMoveListener(new DateTimeBarView.OnTimeBarMoveListener() {
             @Override
             public void onTimeBarMove(long time) {
-
+                mTimeTv.setText(simpleDateFormat.format(new Date(time)));
             }
         });
-
 
     }
 
     @BindView(R.id.date_time_bar_view)
     DateTimeBarView mDateTimeBarView;
-
-
-    @OnClick(R.id.open_apk_btn)
-    void onClickApk(View view) {
-
-        String path = Environment.getExternalStorageDirectory().getPath() + "/JAGles/test.apk";
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.parse("file://" + path), "application/vnd.android.package-archive");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        startActivity(intent);
-    }
-
+    @BindView(R.id.time_tv)
+    TextView mTimeTv;
 
 }
